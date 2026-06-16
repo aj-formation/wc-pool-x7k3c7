@@ -263,7 +263,7 @@ const KO_BY_ROUND = {};
 KO.forEach(k=>{ (KO_BY_ROUND[k.round]=KO_BY_ROUND[k.round]||[]).push(k); });
 
 /* ---------- state ---------- */
-const SEED_RESULTS = {"scores": {"1": [2, 0], "2": [2, 1], "3": [1, 1], "4": [4, 1], "5": [0, 1], "6": [2, 0], "7": [1, 1], "8": [1, 1], "10": [7, 1], "11": [2, 2], "9": [1, 0], "12": [5, 1]}, "advances": {}, "awards": {}};
+const SEED_RESULTS = {"scores": {"1": [2, 0], "2": [2, 1], "3": [1, 1], "4": [4, 1], "5": [0, 1], "6": [2, 0], "7": [1, 1], "8": [1, 1], "10": [7, 1], "11": [2, 2], "9": [1, 0], "12": [5, 1], "13": [1, 1], "14": [0, 0], "15": [2, 2], "16": [1, 1]}, "advances": {}, "awards": {}};
 const state = {
   players: [],          // {name, scores:{m:[a,b]}, advances:{m:1|2}, koTeams:{m:[t1,t2]}, awards:{boot,ball,glove}}
   results: { scores:Object.assign({},SEED_RESULTS.scores), advances:Object.assign({},SEED_RESULTS.advances), awards:Object.assign({},SEED_RESULTS.awards) }, // actuals (seeded)
