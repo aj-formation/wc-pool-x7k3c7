@@ -168,6 +168,19 @@ body{
 .pgrid .kopick.miss{color:var(--mute)}
 .coverage{display:inline-block;margin-top:8px;font-size:12px;color:var(--chalk-dim)}
 .coverage b{color:var(--flare);font-weight:700}
+/* ---- trend chart ---- */
+.trend-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tleg{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;border:1px solid var(--line);
+  border-radius:9px;background:var(--card);cursor:pointer;font:600 13px/1 "Inter";color:var(--chalk-dim);transition:.12s;user-select:none}
+.tleg:hover{border-color:var(--line-soft)}
+.tleg .dot{width:11px;height:11px;border-radius:50%;flex:none}
+.tleg.off{opacity:.4}
+.tleg.off .dot{background:var(--mute)!important}
+.tleg .val{font-family:"Arial Narrow";font-stretch:condensed;font-weight:800;font-size:16px;color:#fff;margin-left:2px}
+.tleg.off .val{color:var(--mute)}
+.chart-wrap{position:relative;border:1px solid var(--line);border-radius:14px;background:#0a201789;padding:18px 14px 10px}
+#trendChart{width:100%;height:auto;display:block;touch-action:none}
+.chart-wrap .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 @media(max-width:640px){
   .board .head,.row{grid-template-columns:46px 1fr 70px 84px}
   .board .head>div:nth-child(3),.row>div:nth-child(3){display:none}
@@ -195,6 +208,7 @@ body{
     <div class="tabs" role="tablist">
       <button class="tab on" data-view="standings" role="tab">Standings</button>
       <button class="tab" data-view="picks" role="tab">Picks grid</button>
+      <button class="tab" data-view="trend" role="tab">Trend</button>
     </div>
     <span class="tag" id="tagline">2026 World Cup pool · 5 players</span>
   </div>
@@ -222,6 +236,13 @@ body{
     <p class="results-intro">Every match, side by side. <b style="color:var(--flare)">✓</b> exact score · <b style="color:var(--gold)">◦</b> right result · <span class="dim">✗ missed</span> · blank = not played yet. Group rows show each person's predicted scoreline; knockout rows show who they had advancing.</p>
     <div class="day-nav" id="pickRoundNav"></div>
     <div class="grid-scroll"><div id="picksGrid"></div></div>
+  </section>
+
+  <!-- TREND VIEW -->
+  <section id="view-trend" class="hidden">
+    <p class="results-intro">Cumulative points after each completed match. Tap a name to show or hide that line.</p>
+    <div class="trend-legend" id="trendLegend"></div>
+    <div class="chart-wrap"><canvas id="trendChart"></canvas><div id="trendEmpty" class="empty hidden">No matches scored yet.</div></div>
   </section>
 
 </div>
@@ -714,6 +735,102 @@ function koRoundName(m){
 }
 function eqTeam(a,b){ return a&&b && a.toString().trim().toLowerCase()===b.toString().trim().toLowerCase(); }
 
+/* ---- trend chart ---- */
+const TREND_COLORS = ["#39d98a","#e8c060","#5aa9e6","#e2624a","#c98af0","#f0a35a","#7ad6c0"];
+const trendState = { hidden:{} };
+function playerColor(i){ return TREND_COLORS[i % TREND_COLORS.length]; }
+
+// cumulative points per match index (1..104) for one player, using same rules as scorePlayer
+function cumulativeSeries(p){
+  const s = scorePlayer(p);
+  const perMatch = {}; // match number -> points earned that settles at that match
+  s.detail.groups.forEach(d=>{ if(d.status!=="pend" && d.got!=null) perMatch[d.m]=(perMatch[d.m]||0)+d.got; });
+  s.detail.ko.forEach(d=>{ if(d.status==="hit") perMatch[d.match]=(perMatch[d.match]||0)+d.got; });
+  // placements + individual awards land at the final (match 104)
+  s.detail.awards.forEach(d=>{ if(d.status==="hit") perMatch[104]=(perMatch[104]||0)+d.got; });
+  // build cumulative array indexed by match, only up to last scored match
+  const cov = coverageInfo();
+  const last = cov.through || 0;
+  const pts = []; let run=0;
+  for(let m=1;m<=last;m++){ run += (perMatch[m]||0); pts.push(run); }
+  return pts;
+}
+
+function renderTrend(){
+  if(!state.players.length) return;
+  const cov = coverageInfo();
+  const last = cov.through || 0;
+  const legend = $("#trendLegend");
+  const scored = state.players.map((p,i)=>({p, i, series:cumulativeSeries(p), color:playerColor(i)}));
+  // legend with current totals
+  legend.innerHTML = scored.map(s=>{
+    const cur = s.series.length? s.series[s.series.length-1] : 0;
+    const off = trendState.hidden[s.p.name] ? " off" : "";
+    return `<span class="tleg${off}" data-name="${esc(s.p.name)}">
+      <span class="dot" style="background:${s.color}"></span>${esc(s.p.name)}<span class="val">${cur}</span></span>`;
+  }).join("");
+  legend.querySelectorAll(".tleg").forEach(el=>el.onclick=()=>{
+    const n=el.dataset.name; trendState.hidden[n]=!trendState.hidden[n]; renderTrend();
+  });
+
+  const cvs = $("#trendChart"), empty=$("#trendEmpty");
+  if(last < 1){ cvs.classList.add("hidden"); empty.classList.remove("hidden"); return; }
+  cvs.classList.remove("hidden"); empty.classList.add("hidden");
+  drawTrend(cvs, scored.filter(s=>!trendState.hidden[s.p.name]), last);
+}
+
+function drawTrend(canvas, series, lastMatch){
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.parentElement.clientWidth - 28; // padding
+  const cssH = Math.max(280, Math.min(440, cssW*0.52));
+  canvas.style.width = cssW+"px"; canvas.style.height = cssH+"px";
+  canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+  const ctx = canvas.getContext("2d"); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cssW,cssH);
+
+  const padL=42, padR=14, padT=14, padB=30;
+  const plotW = cssW-padL-padR, plotH = cssH-padT-padB;
+  // y-max from visible series (fallback to 10)
+  let maxY = 10;
+  series.forEach(s=>s.series.forEach(v=>{ if(v>maxY) maxY=v; }));
+  maxY = Math.ceil(maxY/10)*10;
+  const xN = Math.max(lastMatch,2);
+  const X = m => padL + (plotW * (m-1)/(xN-1));        // match 1..lastMatch
+  const Y = v => padT + plotH - (plotH * v/maxY);
+
+  // grid + axis labels
+  ctx.font = "11px Inter, sans-serif"; ctx.textBaseline="middle";
+  const ySteps = 5;
+  for(let i=0;i<=ySteps;i++){
+    const val = Math.round(maxY*i/ySteps); const yy = Y(val);
+    ctx.strokeStyle = "#163a2c"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(cssW-padR,yy); ctx.stroke();
+    ctx.fillStyle = "#6f8a7d"; ctx.textAlign="right";
+    ctx.fillText(String(val), padL-8, yy);
+  }
+  // x ticks (every ~ sensible interval)
+  ctx.textAlign="center"; ctx.textBaseline="top";
+  const step = xN<=12?2 : xN<=30?5 : 10;
+  for(let m=1;m<=lastMatch;m+=step){
+    ctx.fillStyle="#6f8a7d";
+    ctx.fillText(String(m), X(m), cssH-padB+8);
+  }
+  ctx.fillStyle="#6f8a7d"; ctx.fillText("Match #", padL+plotW/2, cssH-12);
+
+  // lines
+  series.forEach(s=>{
+    if(!s.series.length) return;
+    ctx.strokeStyle=s.color; ctx.lineWidth=2.4; ctx.lineJoin="round"; ctx.beginPath();
+    s.series.forEach((v,idx)=>{ const x=X(idx+1), y=Y(v); idx?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+    ctx.stroke();
+    // end dot + label
+    const lastV = s.series[s.series.length-1];
+    const ex=X(s.series.length), ey=Y(lastV);
+    ctx.fillStyle=s.color; ctx.beginPath(); ctx.arc(ex,ey,3.5,0,7); ctx.fill();
+  });
+}
+window.addEventListener("resize",()=>{ if(!$("#view-trend").classList.contains("hidden")) renderTrend(); });
+
 function koTeamOptions(m){
   const s=new Set();
   state.players.forEach(p=>{ const t=p.koTeams[m]; if(t){ if(t[0])s.add(t[0]); if(t[1])s.add(t[1]); } });
@@ -792,6 +909,8 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   const v=t.dataset.view;
   $("#view-standings").classList.toggle("hidden",v!=="standings");
   $("#view-picks").classList.toggle("hidden",v!=="picks");
+  $("#view-trend").classList.toggle("hidden",v!=="trend");
+  if(v==="trend") renderTrend();
 });
 
 /* ---------- file UI wiring removed (viewer-only build) ---------- */
