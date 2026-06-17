@@ -284,7 +284,7 @@ const KO_BY_ROUND = {};
 KO.forEach(k=>{ (KO_BY_ROUND[k.round]=KO_BY_ROUND[k.round]||[]).push(k); });
 
 /* ---------- state ---------- */
-const SEED_RESULTS = {"scores": {"1": [2, 0], "2": [2, 1], "3": [1, 1], "4": [4, 1], "5": [0, 1], "6": [2, 0], "7": [1, 1], "8": [1, 1], "10": [7, 1], "11": [2, 2], "9": [1, 0], "12": [5, 1], "13": [1, 1], "14": [0, 0], "15": [2, 2], "16": [1, 1]}, "advances": {}, "awards": {}};
+const SEED_RESULTS = {"scores": {"1": [2, 0], "2": [2, 1], "3": [1, 1], "4": [4, 1], "5": [0, 1], "6": [2, 0], "7": [1, 1], "8": [1, 1], "10": [7, 1], "11": [2, 2], "9": [1, 0], "12": [5, 1], "13": [1, 1], "14": [0, 0], "15": [2, 2], "16": [1, 1], "17": [3, 1], "18": [1, 4], "19": [3, 0]}, "advances": {}, "awards": {}};
 const state = {
   players: [],          // {name, scores:{m:[a,b]}, advances:{m:1|2}, koTeams:{m:[t1,t2]}, awards:{boot,ball,glove}}
   results: { scores:Object.assign({},SEED_RESULTS.scores), advances:Object.assign({},SEED_RESULTS.advances), awards:Object.assign({},SEED_RESULTS.awards) }, // actuals (seeded)
@@ -761,10 +761,17 @@ function renderTrend(){
   const cov = coverageInfo();
   const last = cov.through || 0;
   const legend = $("#trendLegend");
-  const scored = state.players.map((p,i)=>({p, i, series:cumulativeSeries(p), color:playerColor(i)}));
-  // legend with current totals
-  legend.innerHTML = scored.map(s=>{
-    const cur = s.series.length? s.series[s.series.length-1] : 0;
+  // keep each player's color stable to their original slot, but order by current rank
+  const scored = state.players.map((p,i)=>{
+    const ser = cumulativeSeries(p);
+    return { p, i, series:ser, color:playerColor(i),
+      now: ser.length? ser[ser.length-1] : 0 };
+  });
+  // rank: most points first; tie-break on name for stability
+  scored.sort((a,b)=> b.now-a.now || a.p.name.localeCompare(b.p.name));
+  // legend with current totals (top-ranked first)
+  legend.innerHTML = scored.map((s,rank)=>{
+    const cur = s.now;
     const off = trendState.hidden[s.p.name] ? " off" : "";
     return `<span class="tleg${off}" data-name="${esc(s.p.name)}">
       <span class="dot" style="background:${s.color}"></span>${esc(s.p.name)}<span class="val">${cur}</span></span>`;
@@ -776,7 +783,9 @@ function renderTrend(){
   const cvs = $("#trendChart"), empty=$("#trendEmpty");
   if(last < 1){ cvs.classList.add("hidden"); empty.classList.remove("hidden"); return; }
   cvs.classList.remove("hidden"); empty.classList.add("hidden");
-  drawTrend(cvs, scored.filter(s=>!trendState.hidden[s.p.name]), last);
+  // draw lowest-ranked first so the leader's line paints last (on top at crossings)
+  const visible = scored.filter(s=>!trendState.hidden[s.p.name]).slice().reverse();
+  drawTrend(cvs, visible, last);
 }
 
 function drawTrend(canvas, series, lastMatch){
