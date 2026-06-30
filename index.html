@@ -152,6 +152,7 @@ body{
 .pgrid th,.pgrid td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--line-soft);white-space:nowrap}
 .pgrid thead th{position:sticky;top:0;background:#0c2419;font:700 11px/1.2 "Inter";letter-spacing:.08em;text-transform:uppercase;color:var(--mute);z-index:2}
 .pgrid .matchcol{text-align:left;position:sticky;left:0;background:#0b2118;z-index:1;min-width:188px}
+.pgrid .ko-section{background:#0c2419;color:var(--gold);font:700 11px/1.3 "Inter";letter-spacing:.14em;text-transform:uppercase;padding:10px 12px;position:static}
 .pgrid thead .matchcol{z-index:3;background:#0c2419}
 .pgrid .mteams{font-weight:600;color:var(--chalk)}
 .pgrid .mmeta{font-size:11px;color:var(--mute);margin-top:2px}
@@ -166,6 +167,11 @@ body{
 .pgrid .kopick{font-weight:600;font-size:12.5px}
 .pgrid .kopick.hit{color:var(--flare);font-weight:800}
 .pgrid .kopick.miss{color:var(--mute)}
+.pgrid .kopick.pend{color:var(--chalk-dim)}
+.team-status.adv{color:var(--flare)}
+.team-status.elim{color:var(--mute);text-decoration:line-through;text-decoration-color:var(--red)}
+.team-status.alive{color:var(--gold)}
+.team-status.pend{color:var(--chalk)}
 .coverage{display:inline-block;margin-top:8px;font-size:12px;color:var(--chalk-dim)}
 .coverage b{color:var(--flare);font-weight:700}
 /* ---- trend chart ---- */
@@ -284,10 +290,10 @@ const KO_BY_ROUND = {};
 KO.forEach(k=>{ (KO_BY_ROUND[k.round]=KO_BY_ROUND[k.round]||[]).push(k); });
 
 /* ---------- state ---------- */
-const SEED_RESULTS = {"scores": {"1": [2, 0], "2": [2, 1], "3": [1, 1], "4": [4, 1], "5": [0, 1], "6": [2, 0], "7": [1, 1], "8": [1, 1], "10": [7, 1], "11": [2, 2], "9": [1, 0], "12": [5, 1], "13": [1, 1], "14": [0, 0], "15": [2, 2], "16": [1, 1], "17": [3, 1], "18": [1, 4], "19": [3, 0], "20": [3, 1], "21": [1, 0], "22": [4, 2], "23": [1, 1], "24": [1, 3], "25": [1, 1], "26": [4, 1], "27": [6, 0], "28": [1, 0], "29": [3, 0], "30": [0, 1], "31": [0, 1], "32": [2, 0], "33": [2, 1], "34": [0, 0], "35": [5, 1], "36": [0, 4], "37": [2, 2], "38": [4, 0], "39": [0, 0], "40": [1, 3], "41": [3, 2], "42": [3, 0], "43": [2, 0], "44": [1, 2], "45": [0, 0], "46": [0, 1], "47": [5, 0], "48": [1, 0], "49": [0, 3], "50": [4, 2], "51": [2, 1], "52": [3, 1], "53": [0, 3], "54": [1, 0], "55": [0, 2], "56": [2, 1], "57": [1, 1], "58": [1, 3], "59": [3, 2], "60": [0, 0], "61": [1, 4], "62": [5, 0], "63": [1, 1], "64": [1, 5], "65": [0, 0], "66": [0, 1], "67": [0, 2], "68": [2, 1], "69": [3, 3], "70": [1, 3], "71": [0, 0], "72": [3, 1]}, "advances": {}, "awards": {}};
+const SEED_RESULTS = {"scores": {"1": [2, 0], "2": [2, 1], "3": [1, 1], "4": [4, 1], "5": [0, 1], "6": [2, 0], "7": [1, 1], "8": [1, 1], "10": [7, 1], "11": [2, 2], "9": [1, 0], "12": [5, 1], "13": [1, 1], "14": [0, 0], "15": [2, 2], "16": [1, 1], "17": [3, 1], "18": [1, 4], "19": [3, 0], "20": [3, 1], "21": [1, 0], "22": [4, 2], "23": [1, 1], "24": [1, 3], "25": [1, 1], "26": [4, 1], "27": [6, 0], "28": [1, 0], "29": [3, 0], "30": [0, 1], "31": [0, 1], "32": [2, 0], "33": [2, 1], "34": [0, 0], "35": [5, 1], "36": [0, 4], "37": [2, 2], "38": [4, 0], "39": [0, 0], "40": [1, 3], "41": [3, 2], "42": [3, 0], "43": [2, 0], "44": [1, 2], "45": [0, 0], "46": [0, 1], "47": [5, 0], "48": [1, 0], "49": [0, 3], "50": [4, 2], "51": [2, 1], "52": [3, 1], "53": [0, 3], "54": [1, 0], "55": [0, 2], "56": [2, 1], "57": [1, 1], "58": [1, 3], "59": [3, 2], "60": [0, 0], "61": [1, 4], "62": [5, 0], "63": [1, 1], "64": [1, 5], "65": [0, 0], "66": [0, 1], "67": [0, 2], "68": [2, 1], "69": [3, 3], "70": [1, 3], "71": [0, 0], "72": [3, 1]}, "advances": {"73": "Canada", "74": "Brazil", "75": "Paraguay", "76": "Morocco"}, "awards": {}, "koMatches": {"73": {"winner": "Canada", "loser": "South Africa"}, "74": {"winner": "Brazil", "loser": "Japan"}, "75": {"winner": "Paraguay", "loser": "Germany"}, "76": {"winner": "Morocco", "loser": "Netherlands"}}, "r32Fixtures": [["South Africa", "Canada"], ["Brazil", "Japan"], ["Germany", "Paraguay"], ["Netherlands", "Morocco"], ["Ivory Coast", "Norway"], ["France", "Sweden"], ["Mexico", "Ecuador"], ["England", "DR Congo"], ["Belgium", "Senegal"], ["United States", "Bosnia and Herzegovina"], ["Spain", "Austria"], ["Portugal", "Croatia"], ["Switzerland", "Algeria"], ["Australia", "Egypt"], ["Argentina", "Cape Verde"], ["Colombia", "Ghana"]]};
 const state = {
   players: [],          // {name, scores:{m:[a,b]}, advances:{m:1|2}, koTeams:{m:[t1,t2]}, awards:{boot,ball,glove}}
-  results: { scores:Object.assign({},SEED_RESULTS.scores), advances:Object.assign({},SEED_RESULTS.advances), awards:Object.assign({},SEED_RESULTS.awards) }, // actuals (seeded)
+  results: { scores:Object.assign({},SEED_RESULTS.scores), advances:Object.assign({},SEED_RESULTS.advances), awards:Object.assign({},SEED_RESULTS.awards), koMatches:Object.assign({},SEED_RESULTS.koMatches||{}), r32Fixtures:(SEED_RESULTS.r32Fixtures||[]).slice() }, // actuals (seeded)
   curDay: null,
 };
 
@@ -450,37 +456,75 @@ function scorePlayer(p){
     const adv=p.advances[m]; if(!adv) return null;
     const t=p.koTeams[m]; return t? t[adv-1] : null;
   }
-  function actTeam(m){
-    const adv=r.advances[m]; if(!adv) return null;
-    // actual advancing team name: prefer player-independent? We track by result advances + actual koTeams unknown.
-    // We store actual advancing team names in r.advances as the TEAM STRING directly.
-    return r.advances[m];
+  // "Reached round R" = team PARTICIPATED in round R, which for R32 means simply being one of
+  // the 32 known bracket teams (see exception below), and for R16/QF/SF/Final means having WON
+  // the previous round's match — a team that beats its R32 opponent has already reached R16
+  // immediately, even before its R16 fixture is played. So later rounds derive their reached-set
+  // from the PREVIOUS round's WINNERS, not from waiting on their own round's match data to exist.
+  const ROUND_SEQUENCE = ["Round of 32","Round of 16","Quarterfinals","Semifinals","Final"];
+  const winnersOfRound = {}; // round -> Set of teams that WON that round's matches so far
+  ROUND_SEQUENCE.forEach(rnd=>{
+    const list = KO_BY_ROUND[rnd] || [];
+    const set = new Set();
+    list.forEach(k=>{
+      const km = r.koMatches && r.koMatches[k.match];
+      if(km && km.winner) set.add(km.winner);
+      else if(r.advances[k.match]) set.add(r.advances[k.match]); // legacy fallback
+    });
+    winnersOfRound[rnd]=set;
+  });
+  const reachedByRound = {
+    "Round of 32": new Set(),               // special-cased below (full known bracket)
+    "Round of 16": winnersOfRound["Round of 32"],
+    "Quarterfinals": winnersOfRound["Round of 16"],
+    "Semifinals": winnersOfRound["Quarterfinals"],
+    "Final": winnersOfRound["Semifinals"],
+  };
+  // EXCEPTION for Round of 32: the full 16-fixture bracket is known the moment the group
+  // stage ends, BEFORE any R32 match is played — both teams in a drawn fixture have already
+  // "made the Round of 32" by definition, regardless of who wins.
+  if(r.r32Fixtures){
+    r.r32Fixtures.forEach(pair=>{ pair.forEach(t=>{ if(t) reachedByRound["Round of 32"].add(t); }); });
   }
-  // For results we store the actual advancing TEAM NAME (string) keyed by match.
-  // Build set of teams that actually reached each round (i.e. won the prior match feeding it).
-  // Simpler & matches workbook: award round points for each predicted team that actually appears
-  // among the winners of that round's matches.
-  const actualWinnersByRound = {};
-  for(const [rnd,list] of Object.entries(KO_BY_ROUND)){
-    actualWinnersByRound[rnd] = new Set(
-      list.map(k=>r.advances[k.match]).filter(Boolean)
-    );
+  // Teams CONFIRMED ELIMINATED before reaching a given round — these are immediate misses
+  // regardless of whether the rest of that round's bracket is fully known yet. A team loses
+  // its R32 match -> instantly confirmed NOT in R16, no need to wait for other R32 games.
+  const eliminatedBefore = { "Round of 32": new Set() };
+  if(r.r32Fixtures && r.r32Fixtures.length>=16){
+    // Any team a player predicted for R32 that ISN'T one of the real 32 qualifiers is an
+    // immediate, certain miss — the group stage is long over, no need to wait on anything.
+    const realR32 = new Set(); r.r32Fixtures.forEach(pair=>pair.forEach(t=>{ if(t) realR32.add(t); }));
+    eliminatedBefore["Round of 32"] = { has: t => !realR32.has(t) }; // inverted-membership "set"
   }
+  ROUND_SEQUENCE.slice(0,-1).forEach((rnd,i)=>{
+    const nextRnd = ROUND_SEQUENCE[i+1];
+    const list = KO_BY_ROUND[rnd] || [];
+    const losers = new Set();
+    list.forEach(k=>{ const km=r.koMatches&&r.koMatches[k.match]; if(km&&km.loser) losers.add(km.loser); });
+    eliminatedBefore[nextRnd] = losers;
+  });
   for(const [rnd,list] of Object.entries(KO_BY_ROUND)){
     const rpts = KO_ROUND_PTS[rnd];
     if(rpts==null) continue; // Third Place & Final scored via placements below
-    const actSet = actualWinnersByRound[rnd];
+    const actSet = reachedByRound[rnd];
+    const elimSet = eliminatedBefore[rnd] || new Set();
     for(const k of list){
-      const pt = predTeam(p,k.match);
-      let got=0, ceil=rpts, status="pend";
+      const teams = p.koTeams[k.match]; if(!teams) continue;
       const settledRound = actSet.size>0; // round has some results in
-      if(pt){
+      const roundDone = settledRound && roundFullyKnown(rnd);
+      // BOTH teams the player has occupying this slot count as "predicted to reach this round" —
+      // not just the one they picked to win. A team predicted as the LOSING side of a matchup
+      // still reached this round in the player's own bracket, and earns credit if it really did.
+      [teams[0], teams[1]].forEach(pt=>{
+        if(!pt) return;
+        let got=0, ceil=rpts, status="pend";
         if(actSet.has(pt)){ got=rpts; status="hit"; }
-        else if(settledRound && roundFullyKnown(rnd)){ got=0; status="miss"; ceil=0; }
-      } else { ceil=0; }
-      if(status==="hit") ceil=rpts;
-      now+=got; max+=ceil;
-      detail.ko.push({rnd, match:k.match, pick:pt, got, status});
+        else if(elimSet.has(pt)){ got=0; status="miss"; ceil=0; } // confirmed knocked out already
+        else if(roundDone){ got=0; status="miss"; ceil=0; }
+        if(status==="hit") ceil=rpts;
+        now+=got; max+=ceil;
+        detail.ko.push({rnd, match:k.match, pick:pt, got, status});
+      });
     }
   }
 
@@ -537,6 +581,7 @@ function eqName(a,b){
   return false;
 }
 function roundFullyKnown(rnd){
+  if(rnd==="Round of 32") return (state.results.r32Fixtures||[]).length>=16;
   const list=KO_BY_ROUND[rnd]; return list.every(k=>state.results.advances[k.match]);
 }
 
@@ -703,20 +748,67 @@ function renderPicks(){
         body+=`<td><span class="pick ${cls}">${pk[0]}–${pk[1]}${mk?`<span class="mk">${mk}</span>`:""}</span></td>`;
       }
       body+=`</tr>`;
-    } else {
-      // knockout: show advancing-team pick
-      const actTeam = r.advances[m];
-      body += `<tr><td class="matchcol"><div class="mteams">Match #${m}</div>`+
-        `<div class="mmeta">${esc(koRoundName(m))}</div>${actTeam?`<div class="mres">→ ${esc(actTeam)}</div>`:""}</td>`;
-      for(const p of players){
-        const adv=p.advances[m];
-        const team = adv? (p.koTeams[m]?p.koTeams[m][adv-1]:null) : null;
-        let cls="";
-        if(actTeam && team){ cls = eqTeam(team,actTeam)?"hit":"miss"; }
-        body+=`<td><span class="kopick ${cls}">${team?esc(team):'<span class="dim">—</span>'}</span></td>`;
-      }
-      body+=`</tr>`;
     }
+  }
+  if(R.lo>72){
+    // ---- knockout view: ONE ROW PER TEAM, matching the per-team credit scoring exactly ----
+    // Credit is awarded per team that reached the round, regardless of whether a player had
+    // that team winning or losing their matchup — so the grid must show the same thing:
+    // teams, not matchups. Confirmed (real result in) teams first, then still-pending teams.
+    const roundsInTab = [...new Set(KO.filter(k=>k.match>=R.lo&&k.match<=R.hi).map(k=>koRoundName(k.match)))];
+    body = roundsInTab.map(roundName=>{
+      const roundList = KO.filter(k=>koRoundName(k.match)===roundName && k.match>=R.lo && k.match<=R.hi);
+
+      // Confirmed-reached set for this round = teams that have ALREADY secured their spot here.
+      // R32: the full known bracket (both sides of every fixture), independent of results.
+      // R16+: teams that WON the previous round's match — that's already certain the moment
+      // they win, no need to wait for their NEXT round's own fixture to exist.
+      const PREV_ROUND = {"Round of 16":"Round of 32","Quarterfinals":"Round of 16","Semifinals":"Quarterfinals","Final":"Semifinals"};
+      const confirmedTeams = new Set();
+      if(roundName==="Round of 32" && r.r32Fixtures){
+        r.r32Fixtures.forEach(pair=>pair.forEach(t=>{ if(t) confirmedTeams.add(t); }));
+      } else if(PREV_ROUND[roundName]){
+        const prevList = KO.filter(k=>koRoundName(k.match)===PREV_ROUND[roundName]);
+        prevList.forEach(k=>{
+          const km=r.koMatches&&r.koMatches[k.match];
+          if(km && km.winner) confirmedTeams.add(km.winner);
+        });
+      }
+
+      // Every player's full set of teams they have occupying this round (both win/lose sides).
+      const playerTeams = players.map(p=>{
+        const set=new Set();
+        roundList.forEach(k=>{ const t=p.koTeams[k.match]; if(t){ if(t[0]) set.add(t[0]); if(t[1]) set.add(t[1]); } });
+        return set;
+      });
+
+      // All candidate teams across confirmed + everyone's predictions, confirmed sorted first.
+      const allTeams = new Set(confirmedTeams);
+      playerTeams.forEach(set=>set.forEach(t=>allTeams.add(t)));
+      const sorted = [...allTeams].sort((a,b)=>{
+        const ca=confirmedTeams.has(a), cb=confirmedTeams.has(b);
+        if(ca!==cb) return ca? -1 : 1;
+        return a.localeCompare(b);
+      });
+
+      const rows = sorted.map(team=>{
+        const isConfirmed = confirmedTeams.has(team);
+        const status = isConfirmed ? "adv" : "pend";
+        const label = isConfirmed ? "confirmed in this round" : "not yet settled";
+        const cells = players.map((p,i)=>{
+          const has = playerTeams[i].has(team);
+          if(!has) return `<td><span class="dim">—</span></td>`;
+          if(isConfirmed) return `<td><span class="kopick hit">✓ +15</span></td>`;
+          return `<td><span class="kopick pend">picked</span></td>`;
+        }).join("");
+        return `<tr><td class="matchcol"><div class="mteams team-status ${status}">${esc(team)}</div>`+
+          `<div class="mmeta">${label}</div></td>${cells}</tr>`;
+      }).join("");
+
+      const sectionHead = roundsInTab.length>1
+        ? `<tr><td class="matchcol ko-section" colspan="${players.length+1}">${esc(roundName)}</td></tr>` : "";
+      return sectionHead + rows;
+    }).join("");
   }
   $("#picksGrid").innerHTML = `<table class="pgrid"><thead>${head}</thead><tbody>${body}</tbody></table>`;
   const cov=coverageInfo();
@@ -935,12 +1027,12 @@ function toast(msg,err){ const t=$("#toast"); t.textContent=msg; t.style.borderC
   t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2600); }
 
 /* ---------- baked-in brackets + results persistence ---------- */
-const BAKED = [{"name": "AJ", "scores": {"1": [2, 1], "2": [1, 1], "3": [2, 0], "4": [1, 0], "5": [1, 2], "6": [1, 1], "7": [1, 1], "8": [0, 2], "9": [1, 1], "10": [4, 0], "11": [2, 1], "12": [1, 1], "13": [0, 2], "14": [3, 0], "15": [1, 0], "16": [2, 0], "17": [3, 1], "18": [1, 3], "19": [3, 0], "20": [2, 0], "21": [1, 2], "22": [2, 1], "23": [3, 0], "24": [0, 2], "25": [2, 1], "26": [2, 0], "27": [1, 0], "28": [2, 1], "29": [4, 0], "30": [0, 2], "31": [2, 1], "32": [1, 1], "33": [2, 0], "34": [3, 0], "35": [3, 1], "36": [0, 2], "37": [2, 0], "38": [3, 0], "39": [3, 1], "40": [0, 2], "41": [1, 2], "42": [3, 0], "43": [2, 1], "44": [0, 2], "45": [3, 1], "46": [1, 2], "47": [3, 0], "48": [2, 0], "49": [0, 3], "50": [3, 0], "51": [2, 2], "52": [1, 1], "53": [0, 2], "54": [1, 2], "55": [1, 2], "56": [1, 2], "57": [2, 0], "58": [0, 3], "59": [1, 2], "60": [2, 1], "61": [1, 2], "62": [3, 0], "63": [1, 1], "64": [0, 3], "65": [1, 1], "66": [1, 2], "67": [0, 3], "68": [3, 0], "69": [1, 1], "70": [0, 3], "71": [1, 2], "72": [1, 1]}, "advances": {"73": 2, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 1, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 1, "100": 1, "101": 2, "102": 2, "103": 1, "104": 2}, "awards": {"boot": "Harry Kane", "ball": "Kylian Mbappe", "glove": "David Raya"}}, {"name": "Caroline", "scores": {"1": [1, 0], "2": [1, 1], "3": [2, 1], "4": [2, 1], "5": [1, 3], "6": [0, 0], "7": [3, 2], "8": [0, 1], "9": [2, 1], "10": [2, 0], "11": [3, 1], "12": [1, 0], "13": [0, 2], "14": [3, 0], "15": [1, 1], "16": [2, 0], "17": [4, 0], "18": [0, 3], "19": [4, 0], "20": [0, 0], "21": [1, 1], "22": [2, 2], "23": [2, 0], "24": [0, 2], "25": [1, 0], "26": [1, 1], "27": [2, 1], "28": [1, 0], "29": [3, 0], "30": [2, 2], "31": [1, 1], "32": [2, 1], "33": [2, 0], "34": [1, 1], "35": [2, 2], "36": [0, 2], "37": [2, 0], "38": [3, 1], "39": [2, 1], "40": [0, 0], "41": [1, 0], "42": [2, 0], "43": [1, 0], "44": [2, 2], "45": [3, 2], "46": [2, 1], "47": [2, 0], "48": [1, 0], "49": [1, 2], "50": [0, 0], "51": [1, 1], "52": [0, 0], "53": [1, 2], "54": [0, 1], "55": [0, 1], "56": [1, 2], "57": [1, 1], "58": [1, 3], "59": [0, 2], "60": [1, 1], "61": [0, 1], "62": [1, 1], "63": [2, 2], "64": [0, 2], "65": [2, 2], "66": [2, 3], "67": [1, 2], "68": [1, 1], "69": [0, 1], "70": [0, 3], "71": [0, 2], "72": [0, 1]}, "advances": {"73": 1, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 2, "80": 1, "81": 1, "82": 2, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 2, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 1, "95": 1, "96": 2, "97": 1, "98": 1, "99": 2, "100": 1, "101": 1, "102": 1, "103": 1, "104": 1}, "awards": {"boot": "", "ball": "", "glove": ""}}, {"name": "Lauren", "scores": {"1": [2, 1], "2": [0, 3], "3": [2, 0], "4": [1, 1], "5": [0, 1], "6": [0, 3], "7": [3, 2], "8": [0, 2], "9": [1, 0], "10": [5, 0], "11": [2, 2], "12": [1, 0], "13": [0, 2], "14": [6, 0], "15": [0, 2], "16": [2, 2], "17": [4, 2], "18": [0, 2], "19": [2, 0], "20": [1, 0], "21": [1, 1], "22": [2, 1], "23": [1, 0], "24": [0, 2], "25": [1, 1], "26": [2, 0], "27": [2, 0], "28": [1, 1], "29": [6, 0], "30": [0, 2], "31": [1, 0], "32": [2, 0], "33": [3, 1], "34": [1, 0], "35": [2, 1], "36": [0, 2], "37": [2, 0], "38": [3, 0], "39": [2, 0], "40": [1, 2], "41": [2, 1], "42": [4, 0], "43": [2, 1], "44": [1, 1], "45": [2, 0], "46": [1, 2], "47": [2, 0], "48": [2, 0], "49": [1, 4], "50": [1, 0], "51": [1, 1], "52": [1, 1], "53": [0, 1], "54": [1, 1], "55": [0, 2], "56": [0, 3], "57": [2, 2], "58": [1, 3], "59": [1, 1], "60": [1, 1], "61": [1, 2], "62": [1, 0], "63": [2, 0], "64": [1, 3], "65": [0, 0], "66": [0, 3], "67": [1, 3], "68": [2, 0], "69": [1, 2], "70": [0, 2], "71": [1, 3], "72": [1, 1]}, "advances": {"73": 2, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 2, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 1, "100": 1, "101": 1, "102": 1, "103": 1, "104": 1}, "awards": {"boot": "Mbappe", "ball": "Olise", "glove": "Becker"}}, {"name": "Sam", "scores": {"1": [1, 0], "2": [1, 0], "3": [1, 0], "4": [1, 0], "5": [0, 2], "6": [0, 1], "7": [1, 0], "8": [0, 2], "9": [0, 1], "10": [3, 0], "11": [1, 0], "12": [1, 0], "13": [0, 1], "14": [3, 0], "15": [1, 0], "16": [1, 0], "17": [2, 0], "18": [0, 2], "19": [1, 0], "20": [2, 0], "21": [1, 0], "22": [1, 0], "23": [2, 0], "24": [0, 1], "25": [1, 0], "26": [1, 0], "27": [2, 0], "28": [1, 0], "29": [3, 0], "30": [0, 1], "31": [1, 0], "32": [1, 0], "33": [1, 0], "34": [2, 0], "35": [1, 0], "36": [0, 1], "37": [1, 0], "38": [3, 0], "39": [2, 0], "40": [0, 1], "41": [1, 0], "42": [2, 0], "43": [1, 0], "44": [0, 1], "45": [2, 0], "46": [0, 1], "47": [2, 0], "48": [1, 0], "49": [0, 2], "50": [2, 0], "51": [1, 0], "52": [1, 0], "53": [0, 1], "54": [0, 1], "55": [0, 2], "56": [0, 1], "57": [1, 0], "58": [0, 1], "59": [0, 1], "60": [1, 0], "61": [0, 1], "62": [1, 0], "63": [1, 0], "64": [0, 2], "65": [1, 0], "66": [0, 1], "67": [0, 2], "68": [1, 0], "69": [0, 1], "70": [0, 2], "71": [0, 1], "72": [1, 0]}, "advances": {"73": 2, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 1, "84": 1, "85": 1, "86": 1, "87": 1, "88": 1, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 2, "100": 1, "101": 2, "102": 1, "103": 1, "104": 1}, "awards": {"boot": "Kylian Mbappe", "ball": "Kylian Mbappe", "glove": "Mike Maignan"}}, {"name": "Katy", "scores": {"1": [2, 0], "2": [0, 0], "3": [3, 0], "4": [2, 1], "5": [0, 2], "6": [2, 2], "7": [3, 1], "8": [0, 2], "9": [0, 0], "10": [3, 0], "11": [2, 0], "12": [1, 0], "13": [0, 2], "14": [3, 0], "15": [1, 1], "16": [2, 1], "17": [3, 0], "18": [0, 4], "19": [3, 0], "20": [0, 0], "21": [1, 1], "22": [2, 1], "23": [1, 0], "24": [0, 1], "25": [0, 0], "26": [1, 0], "27": [1, 0], "28": [2, 0], "29": [2, 0], "30": [2, 1], "31": [2, 1], "32": [1, 1], "33": [3, 0], "34": [1, 0], "35": [3, 0], "36": [0, 0], "37": [1, 0], "38": [2, 0], "39": [2, 0], "40": [1, 1], "41": [3, 0], "42": [3, 0], "43": [2, 1], "44": [0, 0], "45": [2, 0], "46": [0, 1], "47": [1, 0], "48": [1, 0], "49": [1, 3], "50": [1, 0], "51": [2, 2], "52": [1, 0], "53": [1, 1], "54": [1, 1], "55": [0, 0], "56": [0, 2], "57": [0, 2], "58": [1, 3], "59": [1, 2], "60": [0, 1], "61": [2, 4], "62": [1, 0], "63": [1, 0], "64": [1, 2], "65": [0, 1], "66": [0, 4], "67": [1, 3], "68": [1, 0], "69": [0, 1], "70": [0, 2], "71": [1, 1], "72": [0, 1]}, "advances": {"73": 1, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 2, "89": 2, "90": 2, "91": 2, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 1, "100": 1, "101": 2, "102": 1, "103": 1, "104": 2}, "awards": {"boot": "Haaland", "ball": "Mbappe", "glove": "Alisson Becker"}}];
+const BAKED = [{"name": "AJ", "scores": {"1": [2, 1], "2": [1, 1], "3": [2, 0], "4": [1, 0], "5": [1, 2], "6": [1, 1], "7": [1, 1], "8": [0, 2], "9": [1, 1], "10": [4, 0], "11": [2, 1], "12": [1, 1], "13": [0, 2], "14": [3, 0], "15": [1, 0], "16": [2, 0], "17": [3, 1], "18": [1, 3], "19": [3, 0], "20": [2, 0], "21": [1, 2], "22": [2, 1], "23": [3, 0], "24": [0, 2], "25": [2, 1], "26": [2, 0], "27": [1, 0], "28": [2, 1], "29": [4, 0], "30": [0, 2], "31": [2, 1], "32": [1, 1], "33": [2, 0], "34": [3, 0], "35": [3, 1], "36": [0, 2], "37": [2, 0], "38": [3, 0], "39": [3, 1], "40": [0, 2], "41": [1, 2], "42": [3, 0], "43": [2, 1], "44": [0, 2], "45": [3, 1], "46": [1, 2], "47": [3, 0], "48": [2, 0], "49": [0, 3], "50": [3, 0], "51": [2, 2], "52": [1, 1], "53": [0, 2], "54": [1, 2], "55": [1, 2], "56": [1, 2], "57": [2, 0], "58": [0, 3], "59": [1, 2], "60": [2, 1], "61": [1, 2], "62": [3, 0], "63": [1, 1], "64": [0, 3], "65": [1, 1], "66": [1, 2], "67": [0, 3], "68": [3, 0], "69": [1, 1], "70": [0, 3], "71": [1, 2], "72": [1, 1]}, "advances": {"73": 2, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 1, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 1, "100": 1, "101": 2, "102": 2, "103": 1, "104": 2}, "awards": {"boot": "Harry Kane", "ball": "Kylian Mbappe", "glove": "David Raya"}, "koTeams": {"73": ["South Korea", "Canada"], "74": ["Germany", "Scotland"], "75": ["Netherlands", "Morocco"], "76": ["Brazil", "Japan"], "77": ["France", "Paraguay"], "78": ["Ecuador", "Senegal"], "79": ["Mexico", "Ivory Coast"], "80": ["England", "Norway"], "81": ["United States", "Algeria"], "82": ["Belgium", "Czech Republic"], "83": ["Colombia", "Croatia"], "84": ["Spain", "Austria"], "85": ["Switzerland", "Iran"], "86": ["Argentina", "Uruguay"], "87": ["Portugal", "Panama"], "88": ["Turkey", "Egypt"], "89": ["Germany", "France"], "90": ["Canada", "Netherlands"], "91": ["Brazil", "Senegal"], "92": ["Mexico", "England"], "93": ["Croatia", "Spain"], "94": ["United States", "Belgium"], "95": ["Argentina", "Turkey"], "96": ["Switzerland", "Portugal"], "97": ["France", "Netherlands"], "98": ["Spain", "Belgium"], "99": ["Brazil", "England"], "100": ["Argentina", "Portugal"], "101": ["France", "Spain"], "102": ["Brazil", "Argentina"], "103": ["France", "Brazil"], "104": ["Spain", "Argentina"]}}, {"name": "Caroline", "scores": {"1": [1, 0], "2": [1, 1], "3": [2, 1], "4": [2, 1], "5": [1, 3], "6": [0, 0], "7": [3, 2], "8": [0, 1], "9": [2, 1], "10": [2, 0], "11": [3, 1], "12": [1, 0], "13": [0, 2], "14": [3, 0], "15": [1, 1], "16": [2, 0], "17": [4, 0], "18": [0, 3], "19": [4, 0], "20": [0, 0], "21": [1, 1], "22": [2, 2], "23": [2, 0], "24": [0, 2], "25": [1, 0], "26": [1, 1], "27": [2, 1], "28": [1, 0], "29": [3, 0], "30": [2, 2], "31": [1, 1], "32": [2, 1], "33": [2, 0], "34": [1, 1], "35": [2, 2], "36": [0, 2], "37": [2, 0], "38": [3, 1], "39": [2, 1], "40": [0, 0], "41": [1, 0], "42": [2, 0], "43": [1, 0], "44": [2, 2], "45": [3, 2], "46": [2, 1], "47": [2, 0], "48": [1, 0], "49": [1, 2], "50": [0, 0], "51": [1, 1], "52": [0, 0], "53": [1, 2], "54": [0, 1], "55": [0, 1], "56": [1, 2], "57": [1, 1], "58": [1, 3], "59": [0, 2], "60": [1, 1], "61": [0, 1], "62": [1, 1], "63": [2, 2], "64": [0, 2], "65": [2, 2], "66": [2, 3], "67": [1, 2], "68": [1, 1], "69": [0, 1], "70": [0, 3], "71": [0, 2], "72": [0, 1]}, "advances": {"73": 1, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 2, "80": 1, "81": 1, "82": 2, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 2, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 1, "95": 1, "96": 2, "97": 1, "98": 1, "99": 2, "100": 1, "101": 1, "102": 1, "103": 1, "104": 1}, "awards": {"boot": "", "ball": "", "glove": ""}, "koTeams": {"73": ["South Korea", "Switzerland"], "74": ["Germany", "Paraguay"], "75": ["Netherlands", "Scotland"], "76": ["Brazil", "Sweden"], "77": ["France", "Japan"], "78": ["Ivory Coast", "Norway"], "79": ["Mexico", "Morocco"], "80": ["England", "Uzbekistan"], "81": ["United States", "Bosnia and Herzegovina"], "82": ["Belgium", "Czech Republic"], "83": ["Colombia", "Panama"], "84": ["Spain", "Austria"], "85": ["Canada", "Egypt"], "86": ["Argentina", "Uruguay"], "87": ["Portugal", "Croatia"], "88": ["Australia", "Iran"], "89": ["Germany", "France"], "90": ["South Korea", "Netherlands"], "91": ["Brazil", "Norway"], "92": ["Morocco", "England"], "93": ["Panama", "Spain"], "94": ["United States", "Czech Republic"], "95": ["Argentina", "Iran"], "96": ["Canada", "Portugal"], "97": ["France", "Netherlands"], "98": ["Spain", "United States"], "99": ["Brazil", "England"], "100": ["Argentina", "Portugal"], "101": ["France", "Spain"], "102": ["England", "Argentina"], "103": ["Spain", "Argentina"], "104": ["France", "England"]}}, {"name": "Lauren", "scores": {"1": [2, 1], "2": [0, 3], "3": [2, 0], "4": [1, 1], "5": [0, 1], "6": [0, 3], "7": [3, 2], "8": [0, 2], "9": [1, 0], "10": [5, 0], "11": [2, 2], "12": [1, 0], "13": [0, 2], "14": [6, 0], "15": [0, 2], "16": [2, 2], "17": [4, 2], "18": [0, 2], "19": [2, 0], "20": [1, 0], "21": [1, 1], "22": [2, 1], "23": [1, 0], "24": [0, 2], "25": [1, 1], "26": [2, 0], "27": [2, 0], "28": [1, 1], "29": [6, 0], "30": [0, 2], "31": [1, 0], "32": [2, 0], "33": [3, 1], "34": [1, 0], "35": [2, 1], "36": [0, 2], "37": [2, 0], "38": [3, 0], "39": [2, 0], "40": [1, 2], "41": [2, 1], "42": [4, 0], "43": [2, 1], "44": [1, 1], "45": [2, 0], "46": [1, 2], "47": [2, 0], "48": [2, 0], "49": [1, 4], "50": [1, 0], "51": [1, 1], "52": [1, 1], "53": [0, 1], "54": [1, 1], "55": [0, 2], "56": [0, 3], "57": [2, 2], "58": [1, 3], "59": [1, 1], "60": [1, 1], "61": [1, 2], "62": [1, 0], "63": [2, 0], "64": [1, 3], "65": [0, 0], "66": [0, 3], "67": [1, 3], "68": [2, 0], "69": [1, 2], "70": [0, 2], "71": [1, 3], "72": [1, 1]}, "advances": {"73": 2, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 2, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 1, "100": 1, "101": 1, "102": 1, "103": 1, "104": 1}, "awards": {"boot": "Mbappe", "ball": "Olise", "glove": "Becker"}, "koTeams": {"73": ["Czech Republic", "Canada"], "74": ["Germany", "Paraguay"], "75": ["Netherlands", "Morocco"], "76": ["Brazil", "Japan"], "77": ["France", "Sweden"], "78": ["Ivory Coast", "Norway"], "79": ["Mexico", "Scotland"], "80": ["England", "Senegal"], "81": ["Turkey", "Ecuador"], "82": ["Belgium", "South Africa"], "83": ["Colombia", "Croatia"], "84": ["Spain", "Austria"], "85": ["Switzerland", "New Zealand"], "86": ["Argentina", "Uruguay"], "87": ["Portugal", "Panama"], "88": ["United States", "Egypt"], "89": ["Germany", "France"], "90": ["Canada", "Netherlands"], "91": ["Brazil", "Norway"], "92": ["Mexico", "England"], "93": ["Croatia", "Spain"], "94": ["Turkey", "Belgium"], "95": ["Argentina", "Egypt"], "96": ["Switzerland", "Portugal"], "97": ["France", "Netherlands"], "98": ["Spain", "Belgium"], "99": ["Brazil", "England"], "100": ["Argentina", "Portugal"], "101": ["France", "Spain"], "102": ["Brazil", "Argentina"], "103": ["Spain", "Argentina"], "104": ["France", "Brazil"]}}, {"name": "Sam", "scores": {"1": [1, 0], "2": [1, 0], "3": [1, 0], "4": [1, 0], "5": [0, 2], "6": [0, 1], "7": [1, 0], "8": [0, 2], "9": [0, 1], "10": [3, 0], "11": [1, 0], "12": [1, 0], "13": [0, 1], "14": [3, 0], "15": [1, 0], "16": [1, 0], "17": [2, 0], "18": [0, 2], "19": [1, 0], "20": [2, 0], "21": [1, 0], "22": [1, 0], "23": [2, 0], "24": [0, 1], "25": [1, 0], "26": [1, 0], "27": [2, 0], "28": [1, 0], "29": [3, 0], "30": [0, 1], "31": [1, 0], "32": [1, 0], "33": [1, 0], "34": [2, 0], "35": [1, 0], "36": [0, 1], "37": [1, 0], "38": [3, 0], "39": [2, 0], "40": [0, 1], "41": [1, 0], "42": [2, 0], "43": [1, 0], "44": [0, 1], "45": [2, 0], "46": [0, 1], "47": [2, 0], "48": [1, 0], "49": [0, 2], "50": [2, 0], "51": [1, 0], "52": [1, 0], "53": [0, 1], "54": [0, 1], "55": [0, 2], "56": [0, 1], "57": [1, 0], "58": [0, 1], "59": [0, 1], "60": [1, 0], "61": [0, 1], "62": [1, 0], "63": [1, 0], "64": [0, 2], "65": [1, 0], "66": [0, 1], "67": [0, 2], "68": [1, 0], "69": [0, 1], "70": [0, 2], "71": [0, 1], "72": [1, 0]}, "advances": {"73": 2, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 1, "84": 1, "85": 1, "86": 1, "87": 1, "88": 1, "89": 2, "90": 2, "91": 1, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 2, "100": 1, "101": 2, "102": 1, "103": 1, "104": 1}, "awards": {"boot": "Kylian Mbappe", "ball": "Kylian Mbappe", "glove": "Mike Maignan"}, "koTeams": {"73": ["South Korea", "Canada"], "74": ["Germany", "Paraguay"], "75": ["Netherlands", "Morocco"], "76": ["Brazil", "Japan"], "77": ["France", "Sweden"], "78": ["Ecuador", "Norway"], "79": ["Mexico", "Scotland"], "80": ["England", "Senegal"], "81": ["United States", "Bosnia and Herzegovina"], "82": ["Belgium", "Czech Republic"], "83": ["Colombia", "Croatia"], "84": ["Spain", "Austria"], "85": ["Switzerland", "Algeria"], "86": ["Argentina", "Uruguay"], "87": ["Portugal", "Ivory Coast"], "88": ["Turkey", "Egypt"], "89": ["Germany", "France"], "90": ["Canada", "Netherlands"], "91": ["Brazil", "Norway"], "92": ["Mexico", "England"], "93": ["Colombia", "Spain"], "94": ["United States", "Belgium"], "95": ["Argentina", "Turkey"], "96": ["Switzerland", "Portugal"], "97": ["France", "Netherlands"], "98": ["Spain", "Belgium"], "99": ["Brazil", "England"], "100": ["Argentina", "Portugal"], "101": ["France", "Spain"], "102": ["England", "Argentina"], "103": ["France", "Argentina"], "104": ["Spain", "England"]}}, {"name": "Katy", "scores": {"1": [2, 0], "2": [0, 0], "3": [3, 0], "4": [2, 1], "5": [0, 2], "6": [2, 2], "7": [3, 1], "8": [0, 2], "9": [0, 0], "10": [3, 0], "11": [2, 0], "12": [1, 0], "13": [0, 2], "14": [3, 0], "15": [1, 1], "16": [2, 1], "17": [3, 0], "18": [0, 4], "19": [3, 0], "20": [0, 0], "21": [1, 1], "22": [2, 1], "23": [1, 0], "24": [0, 1], "25": [0, 0], "26": [1, 0], "27": [1, 0], "28": [2, 0], "29": [2, 0], "30": [2, 1], "31": [2, 1], "32": [1, 1], "33": [3, 0], "34": [1, 0], "35": [3, 0], "36": [0, 0], "37": [1, 0], "38": [2, 0], "39": [2, 0], "40": [1, 1], "41": [3, 0], "42": [3, 0], "43": [2, 1], "44": [0, 0], "45": [2, 0], "46": [0, 1], "47": [1, 0], "48": [1, 0], "49": [1, 3], "50": [1, 0], "51": [2, 2], "52": [1, 0], "53": [1, 1], "54": [1, 1], "55": [0, 0], "56": [0, 2], "57": [0, 2], "58": [1, 3], "59": [1, 2], "60": [0, 1], "61": [2, 4], "62": [1, 0], "63": [1, 0], "64": [1, 2], "65": [0, 1], "66": [0, 4], "67": [1, 3], "68": [1, 0], "69": [0, 1], "70": [0, 2], "71": [1, 1], "72": [0, 1]}, "advances": {"73": 1, "74": 1, "75": 1, "76": 1, "77": 1, "78": 2, "79": 1, "80": 1, "81": 1, "82": 1, "83": 2, "84": 1, "85": 1, "86": 1, "87": 1, "88": 2, "89": 2, "90": 2, "91": 2, "92": 2, "93": 2, "94": 2, "95": 1, "96": 2, "97": 1, "98": 1, "99": 1, "100": 1, "101": 2, "102": 1, "103": 1, "104": 2}, "awards": {"boot": "Haaland", "ball": "Mbappe", "glove": "Alisson Becker"}, "koTeams": {"73": ["Czech Republic", "Switzerland"], "74": ["Germany", "Morocco"], "75": ["Netherlands", "Scotland"], "76": ["Brazil", "Sweden"], "77": ["France", "Turkey"], "78": ["Ecuador", "Norway"], "79": ["Mexico", "Saudi Arabia"], "80": ["England", "Uzbekistan"], "81": ["United States", "Bosnia and Herzegovina"], "82": ["Belgium", "South Korea"], "83": ["Colombia", "Croatia"], "84": ["Spain", "Austria"], "85": ["Canada", "New Zealand"], "86": ["Argentina", "Uruguay"], "87": ["Portugal", "Senegal"], "88": ["Australia", "Egypt"], "89": ["Germany", "France"], "90": ["Czech Republic", "Netherlands"], "91": ["Brazil", "Norway"], "92": ["Mexico", "England"], "93": ["Croatia", "Spain"], "94": ["United States", "Belgium"], "95": ["Argentina", "Egypt"], "96": ["Canada", "Portugal"], "97": ["France", "Netherlands"], "98": ["Spain", "Belgium"], "99": ["Norway", "England"], "100": ["Argentina", "Portugal"], "101": ["France", "Spain"], "102": ["Norway", "Argentina"], "103": ["France", "Argentina"], "104": ["Spain", "Norway"]}}];
 function loadBaked(){
   state.players = BAKED.map(b=>{
-    const p={name:b.name, scores:b.scores, advances:b.advances, awards:b.awards, koTeams:{}, _rb:null};
-    const rb=resolveBracket(p); p.koTeams=rb.teamsAt; p._rb=rb;
-    return p;
+    // koTeams now comes directly from each player's own Excel-computed bracket (ground truth),
+    // not the approximate in-browser resolver — this fixes third-place-slot assignment errors.
+    return {name:b.name, scores:b.scores, advances:b.advances, awards:b.awards, koTeams:b.koTeams||{}};
   });
 }
 function saveResults(){
